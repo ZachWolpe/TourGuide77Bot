@@ -11,26 +11,15 @@ Functions to handle async Telegram API calls.
 
 from query_gemini import query_gemini_api, generate_system_prompt
 from telegram.ext import (ContextTypes)
-from dotenv import load_dotenv
 from telegram import Update
 import numpy as np
 import logging
-import os
-import re
 
 from telegram_api_helpers import (
     BotConfig,
     BotMessages,
-    split_message, 
-    escape_special_chars,
     chunk_response,
     write_response_to_text_file)
-
-
-# load env --------------------------------------------------------------------------------------------->>
-load_dotenv()
-BOT_USERNAME = os.getenv("BOT_USERNAME")
-# load env --------------------------------------------------------------------------------------------->>
 
 
 def handle_response(text: str) -> str:
@@ -109,7 +98,7 @@ async def travel_tips_command(update: Update, context: ContextTypes.DEFAULT_TYPE
 
 
 # handle messages
-async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE, bot_username: str):
     message_type: str = update.message.chat.type
     text: str = update.message.text
     user: str = update.message.chat.username
@@ -119,8 +108,8 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if message_type == 'group':
         # if in a group chat: only respond to messages that mention the bot
-        if BOT_USERNAME in text:
-            new_text: str = text.replace(BOT_USERNAME, "").strip()
+        if bot_username in text:
+            new_text: str = text.replace(bot_username, "").strip()
             response = handle_response(new_text)
         else:
             return

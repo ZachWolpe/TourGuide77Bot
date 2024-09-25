@@ -62,7 +62,7 @@ def lambda_handler(event, context):
         # app.add_handler(CommandHandler("test_message_format",   test_debug_messsage_format_command))
 
         # Messages
-        app.add_handler(MessageHandler(filters.Text, message_handler))
+        app.add_handler(MessageHandler(filters.TEXT, lambda update, context: message_handler(update, context, bot_username=BOT_USERNAME)))
 
         # Error
         app.add_error_handler(error)
