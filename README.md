@@ -2,7 +2,7 @@
 
 AI powered, tour guide chatbot for Telegram.
 
-![TourGuide77Bot](https://github.com/ZachWolpe/TourGuide77Bot/architecture.png)
+![TourGuide77Bot](https://github.com/ZachWolpe/TourGuide77Bot/blob/main/assets/architecture.png)
 
 
 ```
