@@ -1,0 +1,16 @@
+
+# FROM public.ecr.aws/lambda/python:3.10.2024.09.17.16: Official AWS:Python image is required.
+FROM --platform=linux/amd64 public.ecr.aws/lambda/python:3.12
+
+# copy requirements.txt
+COPY requirements.txt ${LAMBDA_TASK_ROOT}
+
+# install dependencies
+RUN pip install -r requirements.txt
+
+# copy the source code
+COPY src/*.py ${LAMBDA_TASK_ROOT}
+
+# specify lambda handler
+CMD [ "lambda_function.lambda_handler" ]
+
