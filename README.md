@@ -2,6 +2,8 @@
 
 AI powered, tour guide chatbot for Telegram.
 
+![TourGuide77Bot](https://github.com/ZachWolpe/TourGuide77Bot/architecture.png)
+
 
 ```
 : 26 Sep 2024
