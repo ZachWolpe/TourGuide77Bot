@@ -133,8 +133,14 @@ Note: you may need to generate temporary credientials to authenticate with AWS C
 aws ecr get-login-password --region region | docker login --username AWS --password-stdin aws_account_id.dkr.ecr.region.amazonaws.com
 ```
 
+----
+### Rerun All (For Iterative Development)
 
-#### 7. Rerun All (For Iterative Development)
+Create temporary credentials:
+
+```bash
+aws ecr get-login-password --region your-region | docker login --username AWS --password-stdin your-account-id.dkr.ecr.your-region.amazonaws.com
+```
 
 Once you have configured the build, you may want to rerun everything during development.
 
