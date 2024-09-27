@@ -12,31 +12,17 @@ This script contains the main logic for the Telegram bot.
 Functions to handle async Telegram API calls.
 
 : zach.wolpe@medibio.com.au
-: 20:09:2024
+: 27:09:2024
 -------------------------------------------------------------------------------------
 """
 
 import google.generativeai as genai
 from dotenv import load_dotenv
 import logging
+import json
 import os
 
-from telegram.ext import (
-    Application,
-    CommandHandler,
-    filters,
-    MessageHandler)
-
-# from query_gemini import query_gemini_api, generate_system_prompt
-from telegram_api_commands import (
-    start_command,
-    help_command,
-    custom_command,
-    travel_tips_command,
-    error,
-    # test_google_map_command,
-    # test_debug_messsage_format_command,
-    message_handler)
+from telegram_api_helpers import (event_instance, handle_message)
 
 
 # load env --------------------------------------------------------------------------------------------->>
@@ -48,32 +34,60 @@ genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 # load env --------------------------------------------------------------------------------------------->>
 
 
+# app config using requests directly ------------------------------------------------------------------->>
 def lambda_handler(event, context):
     try:
-        logging.info(' > Stage 1: Application built...')
-        app = Application.builder().token(BOT_API_TOKEN).build()
+        print('Processing event...')
+        new_event = event_instance(json.loads(event['body']))
+        print(f"Received message from use {new_event.first_name} {new_event.last_name} ({new_event.from_id}) : {new_event.text}.")
 
-        # Commands
-        app.add_handler(CommandHandler("start",                 start_command))
-        app.add_handler(CommandHandler("help",                  help_command))
-        app.add_handler(CommandHandler("custom",                custom_command))
-        app.add_handler(CommandHandler("travel_tips",           travel_tips_command))
-        # app.add_handler(CommandHandler("test_google_map",       test_google_map_command))
-        # app.add_handler(CommandHandler("test_message_format",   test_debug_messsage_format_command))
+        if new_event.text:
+            handle_message(new_event.chat_id, new_event.text, BOT_API_TOKEN)
 
-        # Messages
-        app.add_handler(MessageHandler(filters.TEXT, lambda update, context: message_handler(update, context, bot_username=BOT_USERNAME)))
-
-        # Error
-        app.add_error_handler(error)
-
-        # Start the bot
-        logging.info("App stared. Polling...")
-        app.run_polling(poll_interval=1)
+        print('Response sent.')
+        return {
+            'statusCode': 200,
+            'body': 'Success'
+        }
     except Exception as e:
-        logging.error('An error occurred: ', e)
-        return 1
+        logging.error(f'An error occurred: {str(e)}')
+        return {
+            'statusCode': 500,
+            'body': 'Error'
+        }
 
 
 if __name__ == "__main__":
-    lambda_handler(None, None)
+
+    # For local testing
+    test_event = {
+        'body': json.dumps({
+            'update_id': 774094673,
+            'message': {
+                'message_id': 294,
+                'from': {
+                    'id': 7770769990,
+                    'is_bot': False,
+                    'first_name': 'Zach',
+                    'last_name': 'Wolpe',
+                    'language_code': 'en'
+                },
+                'chat': {
+                    'id': 7770769990,
+                    'first_name': 'Zach',
+                    'last_name': 'Wolpe',
+                    'type': 'private'
+                },
+                'date': 1727346676,
+                'text': '/tour Sydney'
+            }
+        })
+    }
+
+    lambda_handler(test_event, None)
+
+
+
+
+
+

@@ -43,7 +43,7 @@ def generate_system_prompt(location: str) -> str:
     return system_prompt
 
 
-def query_gemini_api(system_prompt: str, gemini_version: str = "gemini-1.5-flash") -> str:
+def query_gemini_api(system_prompt: str, gemini_version: str = "gemini-1.5-flash", _process_links=True) -> str:
     """
     Query Gemini API to generate content based on the system prompt.
 
@@ -53,8 +53,10 @@ def query_gemini_api(system_prompt: str, gemini_version: str = "gemini-1.5-flash
 
     model = genai.GenerativeModel(gemini_version)
     response = model.generate_content(system_prompt)
-    processed_response = process_links(response.text)
-    return processed_response
+    if _process_links:
+        processed_response = process_links(response.text)
+        return processed_response
+    return response.text
 
 
 def process_links(content: str) -> str:

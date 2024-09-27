@@ -6,7 +6,7 @@ AI powered, tour guide chatbot for Telegram.
 
 
 ```
-: 26 Sep 2024
+: 27 Sep 2024
 : zach.wolpe@medibio.com.au
 ```
 
@@ -134,22 +134,86 @@ aws ecr get-login-password --region region | docker login --username AWS --passw
 ```
 
 
-aws ecr create-repository --repository-name lambda-telegram-bot --region your-region
-
-
 #### 7. Rerun All (For Iterative Development)
 
 Once you have configured the build, you may want to rerun everything during development.
 
 ```bash
-docker build -t <> .
+docker build -f build/dockerfile -t <> .
 docker tag <Local-Docker-Image-Name>:<Tag> aws_account_id.dkr.ecr.us-west-2.amazonaws.com/<Image-name-on-ECR>:<Tag>
 docker push aws_account_id.dkr.ecr.us-west-2.amazonaws.com/<Image-name-on-ECR>:<Tag>
 aws lambda update-function-code --function-name <AWS-Lambda-function-name> --image-uri aws_account_id.dkr.ecr.us-west-2.amazonaws.com/<Image-name-on-ECR>:<Tag> --region your-region
 ```
 
+----
+## Create a Webhook API Endpoint using AWS Gateway (Optional)
+
+You may want you bot to be live, without needing to run a server to constantly poll Telegram for updates.
+
+To achieve this, you can create a webhook API Gateway using AWS Management Console.
 
 
+
+Follow these steps to create a Webhook API and connect it to your Lambda function:
+
+1. Go to the AWS Management Console and navigate to API Gateway.
+
+2. Click "Create API" and choose "HTTP API".
+
+3. Under "Integrations", select "Add integration" and choose:
+   - Integration type: Lambda
+   - Lambda function: Select your Lambda function (telegram-bot-lambda)
+
+4. Under "Configure routes":
+   - Method: POST
+   - Resource path: `/telegram`
+   - Click "Next"
+
+5. Review and create:
+   - API name: TelegramBotWebhookAPI (or your preferred name)
+   - Click "Create"
+
+6. After creation, go to the "Stages" section:
+   - You should see a default stage (often named $default)
+   - Note the "Invoke URL" - this is your API endpoint
+
+7. Go to your Lambda function in the AWS Lambda console:
+   - Under "Configuration", click on "Permissions"
+   - Scroll down to "Resource-based policy"
+   - You should see a policy allowing API Gateway to invoke your function
+
+#### API Gateway URL
+
+You should now have an endpoint route that looks like this:
+
+```
+https://<api-id>.execute-api.<region>.amazonaws.com/<stage>/telegram
+```
+
+Deploy the API and set the webhook URL in the Telegram Bot API.
+
+#### Set the Webhook URL
+
+Set the webhook URL to the API Gateway URL:
+
+```bash
+curl -X POST "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=https://<api-id>.execute-api.<region>.amazonaws.com/<stage>/telegram"
+```
+
+#### Delete the Webhook URL (Optional)
+
+If you want to delete the webhook URL, you can do so with the following command:
+
+```bash
+curl -X POST "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/deleteWebhook"
+```
+
+----
+## API Safety - API Rate Limiting
+
+Ensure to keep your keys secret and never commit them to a public repository.
+
+Project your API Gateway from spam/bots/DDoS attacks by implementing a rate limit.
 
 
 
@@ -157,6 +221,4 @@ aws lambda update-function-code --function-name <AWS-Lambda-function-name> --ima
 ## Resources
 
 - [Telegram Bot API Tutorial](https://www.youtube.com/watch?v=vZtm1wuA2yc)
-
-
-
+- [Telegram Webhook to AWS API Gateway](https://www.youtube.com/watch?v=oYMgw4M4cD0&t=885s)
