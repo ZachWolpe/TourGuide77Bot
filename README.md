@@ -215,6 +215,31 @@ Ensure to keep your keys secret and never commit them to a public repository.
 
 Project your API Gateway from spam/bots/DDoS attacks by implementing a rate limit.
 
+#### Setting up Usage Plans and API Keys
+
+1. In the API Gateway console, go to "Usage Plans".
+2. Create a new usage plan with desired limits:
+   - Rate limit (requests per second)
+   - Burst limit (maximum concurrent requests)
+   - Quota (requests per day/week/month)
+3. Create an API key and associate it with the usage plan.
+4. Require API key for your API method.
+
+
+After creating a plan attach it to a stage:
+
+```bash
+aws apigateway create-usage-plan-key \
+--usage-plan-id <usage-plan-id> \
+--key-id <api-key-id> \
+--key-type API_KEY
+aws apigateway update-usage-plan \
+--usage-plan-id <usage-plan-id> \
+--patch-operations op='add',path='/apiStages',value='<api-id>:<stage-name>'
+```
+
+
+
 
 
 ----------
