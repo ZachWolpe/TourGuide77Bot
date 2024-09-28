@@ -9,6 +9,9 @@ Functions to help parse and transform the Telegram API responses.
 -------------------------------------------------------------------------------------
 """
 from query_gemini import query_gemini_api, generate_system_prompt
+import telegramify_markdown
+# from telegramify_markdown import customize
+from pprint import pprint
 import numpy as np
 import requests
 import logging
@@ -21,7 +24,7 @@ class BotConfig:
 
 
 class BotMessages:
-    TRAVEL_KEY = '/travel'
+    TRAVEL_KEY = '/tour'
     helper_message = f"Please provide a location argument after /travel <arg> to form a valid query. For example: \n  \'{TRAVEL_KEY} Harajuku\'."
     location_not_provided_error = f"Please provide a location argument after /travel <arg> to form a valid query. For example: \n  \'{TRAVEL_KEY} Harajuku\'."
     about_message = """
@@ -44,12 +47,12 @@ class BotMessages:
     random_response_1 = f"404 not found! Try asking for {TRAVEL_KEY}..."
     random_response_2 = "Hmmm not sure what you want..."
     random_response_3 = "I'm sorry, I don't understand that command. Please type /help to get started."
-    random_response_4 = """
-         _  _    ___  _  _     _   _       _     _____                     _         
-        | || |  / _ \| || |   | \ | | ___ | |_  |  ___|__  _   _ _ __   __| |       
-        | || |_| | | | || |_  |  \| |/ _ \| __| | |_ / _ \| | | | '_ \ / _` |      
-        |__   _| |_| |__   _| | |\  | (_) | |_  |  _| (_) | |_| | | | | (_| |_ _ _ _ 
-           |_|  \___/   |_|   |_| \_|\___/ \__| |_|  \___/ \__,_|_| |_|\__,_(_|_|_|_)
+    random_response_4 = """                                                                         \n
+         _  _    ___  _  _     _   _       _     _____                     _                        \n   
+        | || |  / _ \| || |   | \ | | ___ | |_  |  ___|__  _   _ _ __   __| |                       \n
+        | || |_| | | | || |_  |  \| |/ _ \| __| | |_ / _ \| | | | '_ \ / _` |                       \n
+        |__   _| |_| |__   _| | |\  | (_) | |_  |  _| (_) | |_| | | | | (_| |_ _ _ _                \n
+           |_|  \___/   |_|   |_| \_|\___/ \__| |_|  \___/ \__,_|_| |_|\__,_(_|_|_|_)               \n
         """
 
     @staticmethod
@@ -98,9 +101,10 @@ def chunk_response(text_response: str):
     logging.info('Sending response in chunks...')
     for _i, _message in enumerate(split_message(text_response)):
         # remove '###' from headings and '*'
-        _msg = re.sub(r'\n#+\s', '\n ', _message)
-        _msg = re.sub(r'\n\*\s', '\n ', _msg)
-        _msg = escape_special_chars(_message, BotConfig.SPECIAL_CHARS)
+        # _msg = re.sub(r'\n#+\s', '\n ', _message)
+        # _msg = re.sub(r'\n\*\s', '\n ', _msg)
+        # _msg = escape_special_chars(_message, BotConfig.SPECIAL_CHARS)
+        _msg = _message
 
         yield _i, _msg
 
@@ -112,23 +116,35 @@ def write_response_to_text_file(text_response: str, filename: str = 'response.tx
 
 def send_message(chat_id, text, BOT_API_TOKEN):
     url = f"https://api.telegram.org/bot{BOT_API_TOKEN}/sendMessage"
+
+    text = telegramify_markdown.markdownify(
+        text,
+        max_line_length=None,  # If you want to change the max line length for links, images, set it to the desired value.
+        normalize_whitespace=False
+    )
     payload = {
         "chat_id": chat_id,
         "text": text,
         "parse_mode": BotConfig.PARSE_MODE
     }
-    print(f'Sending message (chat_id:{chat_id}) : {text}')
+    print(f'Sending message (chat_id:{chat_id}) : payload : ')
+    pprint(payload)
     response = requests.post(url, json=payload)
     return response.json()
 
 
 def bot_query_gemini_api(text: str):
 
+    text = text.replace(BotMessages.TRAVEL_KEY, '').strip()
+
+    if not text:
+        return BotMessages.location_not_provided_error
+
     system_prompt = generate_system_prompt(text)  # generate system prompt
     text_response = query_gemini_api(system_prompt, _process_links=True)  # query gemini api
 
     # write to file
-    write_response_to_text_file(text_response, 'response.txt')
+    # write_response_to_text_file(text_response, 'response.txt')
 
     return text_response
 
@@ -140,7 +156,7 @@ class BotCommands:
         '/h': BotMessages.helper_message,
         '/?': BotMessages.helper_message,
         '/about': BotMessages.about_message,
-        '/tour': bot_query_gemini_api,
+        BotMessages.TRAVEL_KEY: bot_query_gemini_api,
     }
 
 
@@ -151,11 +167,13 @@ def handle_message(chat_id, text, BOT_API_TOKEN):
 
     # map message to response
     start_of_message = text.lower().strip().split(' ')[0]
+
     return_message = BotCommands.message_handler_map.get(start_of_message, BotMessages.sample_random_response())
 
-    print('> start_of_message: ', start_of_message)
+    print('> recevied:         ', text)
     print('> return_message:   ', return_message)
 
+    # return
     if not isinstance(return_message, str):
         text_response = return_message(text)
 
