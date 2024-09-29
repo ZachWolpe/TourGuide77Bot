@@ -292,7 +292,6 @@ aws lambda update-function-configuration \
 ```
 
 
-
 Update your Lambda function's IAM role to include DynamoDB permissions. 
 
 Navigate to the IAM console and attach the following policy to the Lambda function's role.
