@@ -327,5 +327,6 @@ aws dynamodb scan --table-name <DynamDB-Table> --max-items 10
 ------------------------------
 # Additional Resources
 
+- [Blog write-up](https://zachcolinwolpe.medium.com/deploying-a-custom-llm-on-aws-196b419a3737)
 - [Telegram Bot API Tutorial](https://www.youtube.com/watch?v=vZtm1wuA2yc)
 - [Telegram Webhook to AWS API Gateway](https://www.youtube.com/watch?v=oYMgw4M4cD0&t=885s)
